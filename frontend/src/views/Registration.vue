@@ -207,18 +207,25 @@
                 </div>
               </div>
 
-              <div class="space-y-1.5">
-                <label class="text-xs font-medium"> Kommentar </label>
+              <div class="relative">
                 <textarea
                   v-model="sailor.comment"
                   rows="6"
+                  maxlength="400"
                   class="w-full rounded-md bg-white text-slate-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 resize-none"
                   placeholder="Zum Beispiel Allergien, Unverträglichkeiten, Medikamente, spezielle Hinweise."
                 ></textarea>
-                <p class="text-[11px] text-white/60">
-                  Bei medizinischen Fragen bitte vorab direkt an
-                  optilagerdavos@gmail.com wenden.
-                </p>
+
+                <span
+                  class="absolute bottom-1 right-2 text-[10px]"
+                  :class="
+                    sailor.comment.length > 400
+                      ? 'text-red-500'
+                      : 'text-slate-500'
+                  " 
+                >
+                  {{ sailor.comment.length }}/400
+                </span>
               </div>
             </div>
           </div>
@@ -394,9 +401,8 @@ const sailor = reactive({
   wasInCamp: "",
   diet: "",
   comment: "",
-  acceptChildTerms: false // <--- NEU
-})
-
+  acceptChildTerms: false, // <--- NEU
+});
 
 const parent = reactive({
   firstName: "",
@@ -410,18 +416,17 @@ const parent = reactive({
 });
 
 function resetSailor() {
-  sailor.firstName = ""
-  sailor.lastName = ""
-  sailor.birthdate = ""
-  sailor.gender = ""
-  sailor.club = ""
-  sailor.ahv = ""
-  sailor.wasInCamp = ""
-  sailor.diet = ""
-  sailor.comment = ""
-  sailor.acceptChildTerms = false
+  sailor.firstName = "";
+  sailor.lastName = "";
+  sailor.birthdate = "";
+  sailor.gender = "";
+  sailor.club = "";
+  sailor.ahv = "";
+  sailor.wasInCamp = "";
+  sailor.diet = "";
+  sailor.comment = "";
+  sailor.acceptChildTerms = false;
 }
-
 
 function sailorFormEmpty() {
   return (
@@ -447,9 +452,8 @@ function validateSailor() {
     sailor.wasInCamp &&
     sailor.diet &&
     sailor.acceptChildTerms // <--- NEU
-  )
+  );
 }
-
 
 function addOrUpdateCurrentSailor() {
   if (!validateSailor()) {
@@ -527,17 +531,16 @@ function startEditChild(index: number) {
 
 function submitForm() {
   if (!parent.acceptTerms || !parent.confirmation) {
-    alert("Bitte Elternbestätigung und AGBs akzeptieren.")
-    return
+    alert("Bitte Elternbestätigung und AGBs akzeptieren.");
+    return;
   }
 
   const payload = {
     children: children.value,
-    parent: { ...parent }
-  }
+    parent: { ...parent },
+  };
 
-  console.log("Gesamte Anmeldung:", JSON.stringify(payload, null, 2))
-  alert("Anmeldung erfolgreich übermittelt. Siehe Console Log für JSON.")
+  console.log("Gesamte Anmeldung:", JSON.stringify(payload, null, 2));
+  alert("Anmeldung erfolgreich übermittelt. Siehe Console Log für JSON.");
 }
-
 </script>
