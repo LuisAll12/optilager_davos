@@ -5,6 +5,7 @@ import Registration from "../views/Registration.vue"
 import Info from "../views/Info.vue"
 import Blogs from "../views/Blogs.vue"
 import Participant from "../views/Participant.vue"
+import MailService from "../views/Mailservice.vue"
 
 const router = createRouter({
     history: createWebHistory(), // HTML5 History Mode
@@ -36,8 +37,13 @@ const router = createRouter({
         },
         {
             name: "Participant",
-            path: "/participant",
+            path: "/participants",
             component: Participant
+        },
+        {
+            name: "mailservice",
+            path: "/mailservice",
+            component: MailService
         }
     ],
 })

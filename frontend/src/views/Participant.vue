@@ -31,17 +31,22 @@
           </div> -->
 
                     <div class="space-y-3">
-                        <div v-for="reg in registrations" :key="reg.id">
+                        <div v-for="reg in filteredRegistrations" :key="reg.id">
                             <div class="bg-white rounded-[999px] px-4 py-3 shadow-sm group">
                                 <!-- Mobile: Name + Status + Edit + Pfeil -->
                                 <div class="sm:hidden flex items-center justify-between gap-3">
-                                    <div>
-                                        <p class="font-semibold text-sm text-slate-900">
-                                            {{ reg.child.firstName }} {{ reg.child.lastName }}
-                                        </p>
-                                        <p class="text-[11px] text-slate-500">
-                                            Geburtsdatum: {{ reg.child.birthDate }}
-                                        </p>
+                                    <div class="flex items-center gap-2">
+                                        <input v-if="selectionMode" type="checkbox" class="accent-sky-500 mt-0.5"
+                                            :checked="selectedIds.includes(reg.id)"
+                                            @change="toggleSelection(reg.id, ($event.target as HTMLInputElement).checked)">
+                                        <div>
+                                            <p class="font-semibold text-sm text-slate-900">
+                                                {{ reg.child.firstName }} {{ reg.child.lastName }}
+                                            </p>
+                                            <p class="text-[11px] text-slate-500">
+                                                Geburtsdatum: {{ reg.child.birthDate }}
+                                            </p>
+                                        </div>
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <button type="button"
@@ -60,8 +65,10 @@
 
                                 <!-- Desktop Row -->
                                 <div class="hidden sm:flex items-center gap-4">
-                                    <!-- Name / Geburtsdatum -->
-                                    <div class="flex-1 text-sm">
+                                    <div class="flex items-center gap-3 flex-1 text-sm">
+                                        <input v-if="selectionMode" type="checkbox" class="accent-sky-500"
+                                            :checked="selectedIds.includes(reg.id)"
+                                            @change="toggleSelection(reg.id, ($event.target as HTMLInputElement).checked)">
                                         <p class="font-semibold text-slate-900">
                                             {{ reg.child.firstName }} {{ reg.child.lastName }}, {{ reg.child.birthDate
                                             }}
@@ -192,10 +199,18 @@
 
                     <button type="button"
                         class="flex-1 lg:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-slate-700 transition"
-                        @click="sendEmail">
+                        @click="goToMailService">
                         <EnvelopeIcon class="w-4 h-4" />
                         <span>Email</span>
                     </button>
+
+                    <button type="button"
+                        class="flex-1 lg:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-slate-700 transition"
+                        @click="toggleSelectionMode">
+                        <PlusIcon class="w-4 h-4" />
+                        <span>{{ selectionMode ? "Auswahl beenden" : "Auswählen" }}</span>
+                    </button>
+
                 </aside>
             </div>
         </div>
@@ -213,7 +228,7 @@
                             </h2>
                             <p class="text-[11px] text-white/60">
                                 {{ editForm.child.firstName }} {{ editForm.child.lastName }}, {{
-                                editForm.child.birthDate }}
+                                    editForm.child.birthDate }}
                             </p>
                         </div>
                         <button type="button" class="text-white/60 hover:text-white text-xl leading-none"
@@ -393,17 +408,142 @@
                 </div>
             </div>
         </transition>
+        <!-- Filter Dialog -->
+        <transition name="fade">
+            <div v-if="filterOpen" class="fixed inset-0 z-40 flex justify-end bg-slate-950/60">
+                <div
+                    class="w-full max-w-md h-full bg-slate-900 border-l border-white/10 shadow-2xl text-white flex flex-col">
+                    <header class="flex items-center justify-between px-5 py-4 border-b border-white/10">
+                        <h2 class="text-sm sm:text-base font-semibold">
+                            Filter
+                        </h2>
+                        <button type="button" class="text-white/60 hover:text-white text-xl leading-none"
+                            @click="closeFilter">
+                            ×
+                        </button>
+                    </header>
+
+                    <div class="flex-1 px-5 py-4 space-y-6 overflow-y-auto text-xs sm:text-sm">
+                        <!-- Suche -->
+                        <section class="space-y-2">
+                            <h3 class="text-[11px] font-semibold uppercase tracking-wide text-white/70">
+                                Suche
+                            </h3>
+                            <input v-model="filters.search" type="text" placeholder="Name, Club, Zimmer..."
+                                class="w-full rounded-md bg-slate-800 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-sky-500">
+                        </section>
+
+                        <!-- Status -->
+                        <section class="space-y-2">
+                            <h3 class="text-[11px] font-semibold uppercase tracking-wide text-white/70">
+                                Anmeldestatus
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                <label v-for="s in statusOptions" :key="s"
+                                    class="inline-flex items-center gap-2 text-xs">
+                                    <input type="checkbox" class="accent-sky-500" :value="s" v-model="filters.statuses">
+                                    {{ s }}
+                                </label>
+                            </div>
+                        </section>
+
+                        <!-- Gruppe -->
+                        <section class="space-y-2">
+                            <h3 class="text-[11px] font-semibold uppercase tracking-wide text-white/70">
+                                Gruppe
+                            </h3>
+                            <div class="flex flex-wrap gap-2">
+                                <button v-for="g in groupOptions" :key="g" type="button" @click="toggleGroupFilter(g)"
+                                    class="px-3 py-1 rounded-full border text-xs" :class="filters.groups.includes(g)
+                                        ? 'bg-sky-500 border-sky-500 text-white'
+                                        : 'bg-slate-800 border-slate-600 text-white/80'">
+                                    {{ g }}
+                                </button>
+                            </div>
+                        </section>
+
+                        <!-- Zimmer / Lager / Jahrgang -->
+                        <section class="space-y-3">
+                            <h3 class="text-[11px] font-semibold uppercase tracking-wide text-white/70">
+                                Weitere Filter
+                            </h3>
+
+                            <label class="inline-flex items-center gap-2 text-xs">
+                                <input type="checkbox" v-model="filters.onlyWithoutRoom" class="accent-sky-500">
+                                Nur ohne Zimmer (Ausstehend)
+                            </label>
+
+                            <div class="space-y-1">
+                                <p class="text-[11px] text-white/70">
+                                    Lager bereits besucht
+                                </p>
+                                <div class="flex flex-wrap gap-3 text-xs">
+                                    <label class="inline-flex items-center gap-1.5">
+                                        <input type="radio" value="all" v-model="filters.wasInCamp"
+                                            class="accent-sky-500">
+                                        Alle
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5">
+                                        <input type="radio" value="yes" v-model="filters.wasInCamp"
+                                            class="accent-sky-500">
+                                        Ja
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5">
+                                        <input type="radio" value="no" v-model="filters.wasInCamp"
+                                            class="accent-sky-500">
+                                        Nein
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="space-y-1">
+                                    <label class="text-[11px] text-white/70">
+                                        Jahrgang von
+                                    </label>
+                                    <input v-model="filters.yearFrom" type="number" min="2000" max="2100"
+                                        class="w-full rounded-md bg-slate-800 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-sky-500">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[11px] text-white/70">
+                                        Jahrgang bis
+                                    </label>
+                                    <input v-model="filters.yearTo" type="number" min="2000" max="2100"
+                                        class="w-full rounded-md bg-slate-800 px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-sky-500">
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <footer class="flex justify-between items-center px-5 py-4 border-t border-white/10">
+                        <button type="button"
+                            class="text-[11px] text-white/70 hover:text-white underline-offset-2 hover:underline"
+                            @click="resetFilters">
+                            Filter zurücksetzen
+                        </button>
+                        <button type="button"
+                            class="px-4 py-2 text-xs sm:text-sm rounded-md bg-sky-500 text-white font-semibold hover:bg-sky-400"
+                            @click="closeFilter">
+                            Schliessen
+                        </button>
+                    </footer>
+                </div>
+            </div>
+        </transition>
+
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { ref, computed, reactive } from "vue"
+import { useRouter } from "vue-router"
 import {
     ChevronDownIcon,
     ArrowDownTrayIcon,
     FunnelIcon,
     EnvelopeIcon,
-    PencilSquareIcon
+    PencilSquareIcon,
+    PlusIcon
 } from "@heroicons/vue/24/outline"
 
 interface Child {
@@ -426,6 +566,7 @@ interface Parent {
     zip: string
     city: string
     phone: string
+    email: string
 }
 
 interface Registration {
@@ -464,7 +605,8 @@ const registrations = ref<Registration[]>([
             address: "Bahnhofstrasse 21",
             zip: "5023",
             city: "Luzern",
-            phone: "079 111 22 33"
+            phone: "079 111 22 33",
+            email: "lena.boetting@example.com"
         },
         comment:
             "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam."
@@ -493,7 +635,8 @@ const registrations = ref<Registration[]>([
             address: "Bahnhofstrasse 21",
             zip: "5023",
             city: "Luzern",
-            phone: "079 111 22 33"
+            phone: "079 111 22 33",
+            email: "lena.boetting@example.com"
         },
         comment: ""
     },
@@ -521,7 +664,8 @@ const registrations = ref<Registration[]>([
             address: "Bahnhofstrasse 21",
             zip: "5023",
             city: "Luzern",
-            phone: "079 111 22 33"
+            phone: "079 111 22 33",
+            email: "lena.boetting@example.com"
         },
         comment: ""
     },
@@ -549,7 +693,8 @@ const registrations = ref<Registration[]>([
             address: "Bahnhofstrasse 21",
             zip: "5023",
             city: "Luzern",
-            phone: "079 111 22 33"
+            phone: "079 111 22 33",
+            email: "lena.boetting@example.com"
         },
         comment: ""
     },
@@ -577,7 +722,8 @@ const registrations = ref<Registration[]>([
             address: "Bahnhofstrasse 21",
             zip: "5023",
             city: "Luzern",
-            phone: "079 111 22 33"
+            phone: "079 111 22 33",
+            email: "lena.boetting@example.com"
         },
         comment: ""
     },
@@ -605,13 +751,168 @@ const registrations = ref<Registration[]>([
             address: "Bahnhofstrasse 21",
             zip: "5023",
             city: "Luzern",
-            phone: "079 111 22 33"
+            phone: "079 111 22 33",
+            email: "lena.boetting@example.com"
         },
         comment: ""
     }
 ])
 
 const openId = ref<number | null>(registrations.value[0]?.id ?? null)
+const selectMode = ref(false)
+const filterOpen = ref(false)
+const router = useRouter()
+const selectionMode = ref(false)
+const selectedIds = ref<number[]>([])
+
+const filters = reactive({
+    search: "",
+    statuses: [] as string[],
+    groups: [] as string[],
+    onlyWithoutRoom: false,
+    wasInCamp: "all" as "all" | "yes" | "no",   
+    yearFrom: "",
+    yearTo: ""
+})
+
+
+const filteredRegistrations = computed(() => {
+    return registrations.value.filter((reg) => {
+        // Suche
+        if (filters.search.trim()) {
+            const term = filters.search.trim().toLowerCase()
+            const haystack = [
+                reg.child.firstName,
+                reg.child.lastName,
+                reg.child.club,
+                reg.parent.firstName,
+                reg.parent.lastName,
+                reg.room
+            ]
+                .filter(Boolean)
+                .join(" ")
+                .toLowerCase()
+
+            if (!haystack.includes(term)) return false
+        }
+
+        // Status
+        if (filters.statuses.length > 0 && !filters.statuses.includes(reg.status)) {
+            return false
+        }
+
+        // Gruppe
+        if (filters.groups.length > 0 && !filters.groups.includes(reg.group)) {
+            return false
+        }
+
+        // Zimmer
+        if (filters.onlyWithoutRoom && reg.room !== "Ausstehend") {
+            return false
+        }
+
+        // Lager besucht
+        if (filters.wasInCamp === "yes" && !reg.child.wasInCamp) return false
+        if (filters.wasInCamp === "no" && reg.child.wasInCamp) return false
+
+        // Jahrgang
+        const yearNum = parseInt(reg.child.year, 10)
+        if (filters.yearFrom) {
+            const min = parseInt(filters.yearFrom, 10)
+            if (!Number.isNaN(min) && yearNum < min) return false
+        }
+        if (filters.yearTo) {
+            const max = parseInt(filters.yearTo, 10)
+            if (!Number.isNaN(max) && yearNum > max) return false
+        }
+
+        return true
+    })
+})
+
+
+function openFilter() {
+    filterOpen.value = true
+}
+
+function closeFilter() {
+    filterOpen.value = false
+}
+
+function resetFilters() {
+    filters.search = ""
+    filters.statuses = []
+    filters.groups = []
+    filters.onlyWithoutRoom = false
+    filters.wasInCamp = "all"
+    filters.yearFrom = ""
+    filters.yearTo = ""
+}
+
+function toggleGroupFilter(group: string) {
+    const idx = filters.groups.indexOf(group)
+    if (idx === -1) {
+        filters.groups.push(group)
+    } else {
+        filters.groups.splice(idx, 1)
+    }
+}
+
+
+function toggleSelectionMode() {
+    selectionMode.value = !selectionMode.value
+    if (!selectionMode.value) {
+        selectedIds.value = []
+    }
+}
+
+function toggleSelection(id: number, checked: boolean) {
+    if (checked) {
+        if (!selectedIds.value.includes(id)) {
+            selectedIds.value.push(id)
+        }
+    } else {
+        selectedIds.value = selectedIds.value.filter(x => x !== id)
+    }
+}
+
+
+
+function getSelectedOrAll() {
+    if (selectedIds.value.length === 0) return registrations.value
+    return registrations.value.filter(r => selectedIds.value.includes(r.id))
+}
+
+function exportCsv() {
+    const rows = getSelectedOrAll()
+    console.log("Export als CSV angeklickt (Zeilen):", rows)
+}
+
+function goToMailService() {
+  // Welche Registrierungen sind ausgewählt?
+  const selectedRegs = registrations.value.filter(reg =>
+    selectedIds.value.includes(reg.id)
+  )
+
+  if (selectedRegs.length === 0) {
+    alert("Bitte mindestens einen Teilnehmer auswählen, bevor du den Mailservice öffnest.")
+    return
+  }
+
+  // Empfänger-Objekte bauen
+  const recipients = selectedRegs.map(reg => ({
+    id: reg.id,
+    firstName: reg.child.firstName,
+    lastName: reg.child.lastName,
+    email: reg.parent.email
+  }))
+
+  router.push({
+    name: "mailservice",   // Route-Name in deinem Router
+    state: { recipients }  // wird im History-State mitgegeben
+  })
+}
+
 
 
 
@@ -694,16 +995,7 @@ function saveEdit() {
     closeEdit()
 }
 
-// Dummy-Actions
-function exportCsv() {
-    console.log("Export als CSV angeklickt", registrations.value)
-}
-function openFilter() {
-    console.log("Filter öffnen (noch nicht implementiert)")
-}
-function sendEmail() {
-    console.log("Email-Funktion (noch nicht implementiert)")
-}
+
 </script>
 
 <style scoped>
