@@ -159,8 +159,8 @@
                                     placeholder="Zum Beispiel Allergien, Unverträglichkeiten, Medikamente, spezielle Hinweise."></textarea>
 
                                 <span class="absolute bottom-1 right-2 text-[10px]" :class="sailor.comment.length > 400
-                                        ? 'text-red-500'
-                                        : 'text-slate-500'
+                                    ? 'text-red-500'
+                                    : 'text-slate-500'
                                     ">
                                     {{ sailor.comment.length }}/400
                                 </span>
@@ -191,6 +191,7 @@
                 <!-- STEP 2: Eltern / Vertretung -->
                 <form v-else class="space-y-6" @submit.prevent="submitForm">
                     <div class="grid gap-8 lg:grid-cols-2">
+                        <!-- Links -->
                         <!-- Links -->
                         <div class="space-y-4">
                             <h2 class="text-sm font-semibold tracking-wide">
@@ -227,6 +228,14 @@
                                         class="w-full rounded-md bg-white text-slate-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500" />
                                 </div>
                             </div>
+
+                            <!-- NEU: Email -->
+                            <div class="space-y-1.5">
+                                <label class="text-xs font-medium"> E Mail* </label>
+                                <input v-model="parent.email" type="email" required
+                                    class="w-full rounded-md bg-white text-slate-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500"
+                                    placeholder="name@example.com" />
+                            </div>
                         </div>
 
                         <!-- Rechts -->
@@ -239,14 +248,15 @@
                                     class="w-full rounded-md bg-white text-slate-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500" />
                             </div>
 
+                            <!-- Teilnahme bestätigen* -->
                             <div class="space-y-1.5">
                                 <p class="text-xs font-medium">Teilnahme bestätigen*</p>
                                 <label class="inline-flex items-center gap-2 text-xs">
-                                    <input type="checkbox" v-model="sailor.acceptChildTerms" required
-                                        class="accent-sky-500" />
+                                    <input type="checkbox" v-model="parent.acceptChildTerms" class="accent-sky-500" />
                                     Ich bestätige, dass mein Kind am Lager teilnehmen darf.
                                 </label>
                             </div>
+
 
                             <div class="space-y-1.5">
                                 <p class="text-xs font-medium">Zustimmung der AGBs*</p>
@@ -302,7 +312,6 @@ const sailor = reactive({
     wasInCamp: "",
     diet: "",
     comment: "",
-    acceptChildTerms: false, // <--- NEU
 });
 
 const parent = reactive({
@@ -312,22 +321,24 @@ const parent = reactive({
     zip: "",
     city: "",
     emergencyPhone: "",
+    email: "",
     confirmation: "",
     acceptTerms: false,
+    acceptChildTerms: false,
 });
 
 function resetSailor() {
-    sailor.firstName = "";
-    sailor.lastName = "";
-    sailor.birthdate = "";
-    sailor.gender = "";
-    sailor.club = "";
-    sailor.ahv = "";
-    sailor.wasInCamp = "";
-    sailor.diet = "";
-    sailor.comment = "";
-    sailor.acceptChildTerms = false;
+    sailor.firstName = ""
+    sailor.lastName = ""
+    sailor.birthdate = ""
+    sailor.gender = ""
+    sailor.club = ""
+    sailor.ahv = ""
+    sailor.wasInCamp = ""
+    sailor.diet = ""
+    sailor.comment = ""
 }
+
 
 function sailorFormEmpty() {
     return (
@@ -351,8 +362,7 @@ function validateSailor() {
         sailor.gender &&
         sailor.club &&
         sailor.wasInCamp &&
-        sailor.diet &&
-        sailor.acceptChildTerms // <--- NEU
+        sailor.diet
     );
 }
 
@@ -431,41 +441,59 @@ function startEditChild(index: number) {
 }
 
 function isValidAhv(number: string): boolean {
-  // Alle Nicht-Ziffern entfernen (Punkte, Leerzeichen, etc.)
-  number = number.replace(/\D/g, "");
+    // Alle Nicht-Ziffern entfernen (Punkte, Leerzeichen, etc.)
+    number = number.replace(/\D/g, "");
 
-  // Prüfe Länge & Zahlenformat
-  if (!/^\d{13}$/.test(number)) return false;
+    // Prüfe Länge & Zahlenformat
+    if (!/^\d{13}$/.test(number)) return false;
 
-  // Prüfe Präfix 756
-  if (!number.startsWith("756")) return false;
+    // Prüfe Präfix 756
+    if (!number.startsWith("756")) return false;
 
-  // EAN-13 Prüfziffer berechnen
-  const digits = number.split("").map((n) => parseInt(n));
-  let sum = 0;
+    // EAN-13 Prüfziffer berechnen
+    const digits = number.split("").map((n) => parseInt(n));
+    let sum = 0;
 
-  for (let i = 0; i < 12; i++) {
-    sum += digits[i] * (i % 2 === 0 ? 1 : 3);
-  }
+    for (let i = 0; i < 12; i++) {
+        sum += digits[i] * (i % 2 === 0 ? 1 : 3);
+    }
 
-  const check = (10 - (sum % 10)) % 10;
-  return check === digits[12];
+    const check = (10 - (sum % 10)) % 10;
+    return check === digits[12];
 }
 
 
 
 function submitForm() {
-    if (!parent.acceptTerms || !parent.confirmation) {
-        alert("Bitte Elternbestätigung und AGBs akzeptieren.");
-        return;
+    if (children.value.length === 0) {
+        alert("Bitte mindestens ein Kind erfassen.")
+        step.value = 1
+        return
+    }
+
+    const parentValid =
+        parent.firstName &&
+        parent.lastName &&
+        parent.address &&
+        parent.zip &&
+        parent.city &&
+        parent.emergencyPhone &&
+        parent.email &&          // NEU
+        parent.acceptChildTerms &&
+        parent.acceptTerms
+
+    if (!parentValid) {
+        alert("Bitte alle Pflichtfelder bei den Eltern ausfüllen und Bestätigungen setzen.")
+        return
     }
 
     const payload = {
         children: children.value,
         parent: { ...parent },
-    };
+    }
 
-    console.log("Gesamte Anmeldung:", JSON.stringify(payload, null, 2));
-    alert("Anmeldung erfolgreich übermittelt. Siehe Console Log für JSON.");
+    console.log("Gesamte Anmeldung:", JSON.stringify(payload, null, 2))
+    alert("Anmeldung erfolgreich übermittelt. Siehe Console Log für JSON.")
 }
+
 </script>
