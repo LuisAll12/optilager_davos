@@ -3,6 +3,8 @@ import Home from "../views/Home.vue"
 import Auth from "../views/Auth.vue"
 import Registration from "../views/Registration.vue"
 import Info from "../views/Info.vue"
+import Blogs from "../views/Blogs.vue"
+import Participant from "../views/Participant.vue"
 
 const router = createRouter({
     history: createWebHistory(), // HTML5 History Mode
@@ -26,6 +28,16 @@ const router = createRouter({
             name: "Info",
             path: "/info",
             component: Info
+        },
+        {
+            name: "Blogs",
+            path: "/blogs",
+            component: Blogs
+        },
+        {
+            name: "Participant",
+            path: "/participant",
+            component: Participant
         }
     ],
 })
