@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router"
 import Home from "../views/Home.vue"
 import Auth from "../views/Auth.vue"
+import Registration from "../views/Registration.vue"
 
 const router = createRouter({
     history: createWebHistory(), // HTML5 History Mode
@@ -14,6 +15,11 @@ const router = createRouter({
             name: "Auth",
             path: "/auth",
             component: Auth
+        },
+        {
+            name: "Registration",
+            path: "/registration",
+            component: Registration
         }
     ],
 })

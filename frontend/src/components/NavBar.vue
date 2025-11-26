@@ -2,19 +2,20 @@
   <header class="sticky top-0 z-50 backdrop-blur bg-slate-900/70 border-b border-white/10">
     <nav class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
       <!-- Branding -->
-      <div class="flex items-center gap-3">
-        <img class="h-6 w-5" src="../assets/imgs/sail.png" alt="">
-        <span class="text-sm tracking-widest font-semibold">
-          OPTI LAGER DAVOS
-        </span>
-      </div>
-
+      <RouterLink to="/">
+        <div class="flex items-center gap-3">
+          <img class="h-6 w-5" src="../assets/imgs/sail.png" alt="">
+          <span class="text-sm tracking-widest font-semibold">
+            OPTILAGER DAVOS
+          </span>
+        </div>
+      </RouterLink>
       <!-- Desktop Navigation -->
       <ul class="hidden md:flex items-center gap-6 text-sm">
         <li><RouterLink to="/" class="hover:opacity-80">{{ t("nav.home") }}</RouterLink></li>
         <li><a href="#info" class="hover:opacity-80">{{ t("nav.info") }}</a></li>
         <li><a href="#blog" class="hover:opacity-80">{{ t("nav.blog") }}</a></li>
-        <li><a href="#anmeldung" class="hover:opacity-80">{{ t("nav.signup") }}</a></li>
+        <li><RouterLink to="/registration" class="hover:opacity-80">{{ t("nav.signup") }}</RouterLink></li>
         <li><a href="#media" class="hover:opacity-80">{{ t("nav.media") }}</a></li>
       </ul>
 
