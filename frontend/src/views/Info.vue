@@ -1,22 +1,22 @@
 <template>
   <section class="max-w-6xl mx-auto px-4 pt-10 pb-6">
-    <!-- Neuer, dezenter Header -->
-    <div
-      class="hidden sm:grid grid-cols-[2fr,1fr,1fr,1fr,auto] text-[11px] text-white/50 mb-3 px-6"
-    >
-      <span class="uppercase tracking-wide">
-        Vorname Nachname, Geburtsdatum
-      </span>
-      <span class="uppercase tracking-wide text-center">
+    <!-- Desktop Header -->
+    <div class="hidden sm:flex text-[11px] text-white/50 mb-3 px-4">
+      <div class="flex-1">
+        <span class="tracking-wide">
+          Vorname Nachname, Geburtsdatum
+        </span>
+      </div>
+      <div class="w-32 text-center">
         Anmelde Datum
-      </span>
-      <span class="uppercase tracking-wide text-center">
+      </div>
+      <div class="w-32 text-center">
         Anmeldestatus
-      </span>
-      <span class="uppercase tracking-wide text-center">
+      </div>
+      <div class="w-28 text-center">
         prov. Gruppe
-      </span>
-      <span></span>
+      </div>
+      <div class="w-7"></div>
     </div>
 
     <!-- Liste -->
@@ -25,61 +25,83 @@
         v-for="reg in registrations"
         :key="reg.id"
       >
-        <!-- Zeile -->
-        <div
-          class="bg-white rounded-full px-4 py-3 shadow-sm flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4"
-        >
-          <!-- Name / Geburtsdatum -->
-          <div class="flex-1 text-sm">
-            <p class="font-semibold text-slate-900">
-              {{ reg.name }}
-            </p>
-            <p class="text-xs text-slate-500">
-              Geburtsdatum: {{ reg.birthDate }}
-            </p>
-          </div>
+        <div class="bg-white rounded-[999px] px-4 py-3 shadow-sm">
+          <!-- Mobile Layout -->
+<div class="sm:hidden">
+  <div class="flex items-center justify-between gap-3">
+    <div>
+      <p class="font-semibold text-sm text-slate-900">
+        {{ reg.name }}
+      </p>
+    </div>
 
-          <!-- Anmelde Datum -->
-          <div class="sm:w-32 text-xs text-slate-700 flex sm:block justify-between">
-            <span class="sm:hidden font-medium text-slate-500 mr-2">Anmelde Datum</span>
-            <span>{{ reg.registerDate }}</span>
-          </div>
+    <button
+      type="button"
+      class="flex items-center justify-center rounded-full w-7 h-7 border border-slate-300 text-slate-700 hover:bg-slate-100 transition"
+      @click="toggle(reg.id)"
+      :aria-expanded="openId === reg.id"
+    >
+      <ChevronDownIcon
+        class="w-4 h-4 transition-transform"
+        :class="openId === reg.id ? 'rotate-180' : ''"
+      />
+    </button>
+  </div>
+</div>
 
-          <!-- Anmeldestatus -->
-          <div class="sm:w-32 text-xs flex sm:block justify-between items-center gap-2">
-            <span class="sm:hidden font-medium text-slate-500 mr-2">Status</span>
-            <span
-              class="inline-flex items-center rounded-full px-3 py-1"
-              :class="statusBadgeClass(reg.status)"
-            >
-              {{ reg.status }}
-            </span>
-          </div>
 
-          <!-- prov. Gruppe -->
-          <div class="sm:w-28 text-xs flex sm:block justify-between items-center gap-2">
-            <span class="sm:hidden font-medium text-slate-500 mr-2">Gruppe</span>
-            <span
-              class="inline-flex items-center rounded-full px-3 py-1"
-              :class="groupBadgeClass(reg.group)"
-            >
-              {{ reg.group }}
-            </span>
-          </div>
+          <!-- Desktop Layout -->
+          <div class="hidden sm:flex items-center gap-4">
+            <!-- Name / Geburtsdatum -->
+            <div class="flex-1 text-sm">
+              <p class="font-semibold text-slate-900">
+                {{ reg.name }}
+              </p>
+              <p class="text-xs text-slate-500">
+                Geburtsdatum: {{ reg.birthDate }}
+              </p>
+            </div>
 
-          <!-- Toggle Button -->
-          <button
-            type="button"
-            class="self-end sm:self-auto flex items-center justify-center rounded-full w-7 h-7 border border-slate-300 text-slate-700 hover:bg-slate-100 transition"
-            @click="toggle(reg.id)"
-            :aria-expanded="openId === reg.id"
-            :aria-label="openId === reg.id ? 'Details schliessen' : 'Details anzeigen'"
-          >
-            <ChevronDownIcon
-              class="w-4 h-4 transition-transform"
-              :class="openId === reg.id ? 'rotate-180' : ''"
-            />
-          </button>
+            <!-- Datum -->
+            <div class="w-32 text-xs text-slate-700 text-center">
+              {{ reg.registerDate }}
+            </div>
+
+            <!-- Status -->
+            <div class="w-32 text-xs flex justify-center">
+              <span
+                class="inline-flex items-center rounded-full px-3 py-1"
+                :class="statusBadgeClass(reg.status)"
+              >
+                {{ reg.status }}
+              </span>
+            </div>
+
+            <!-- Gruppe -->
+            <div class="w-28 text-xs flex justify-center">
+              <span
+                class="inline-flex items-center rounded-full px-3 py-1"
+                :class="groupBadgeClass(reg.group)"
+              >
+                {{ reg.group }}
+              </span>
+            </div>
+
+            <!-- Pfeil -->
+            <div class="w-7 flex justify-end">
+              <button
+                type="button"
+                class="flex items-center justify-center rounded-full w-7 h-7 border border-slate-300 text-slate-700 hover:bg-slate-100 transition"
+                @click="toggle(reg.id)"
+                :aria-expanded="openId === reg.id"
+              >
+                <ChevronDownIcon
+                  class="w-4 h-4 transition-transform"
+                  :class="openId === reg.id ? 'rotate-180' : ''"
+                />
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Detail Panel -->
@@ -124,7 +146,7 @@
     </div>
   </section>
 
-  <!-- Infos-Block unten, Inhalt aus JSON -->
+  <!-- Infos unten bleiben gleich -->
   <section class="max-w-6xl mx-auto px-4 pb-16 space-y-4">
     <h2 class="text-xl sm:text-2xl font-semibold">
       {{ infoSection.title }}
@@ -143,7 +165,6 @@
 import { ref } from "vue"
 import { ChevronDownIcon } from "@heroicons/vue/24/outline"
 
-// Testdaten: Anmeldungen
 const registrations = ref([
   {
     id: 1,
@@ -171,12 +192,11 @@ const registrations = ref([
   }
 ])
 
-// Testdaten: Info-Text unten
 const infoSection = ref({
   title: "Infos",
   paragraphs: [
-    "Lorem ipsum dolor sit amet, consectetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
-    "Lorem ipsum dolor sit amet, consectetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
+    "Lorem ipsum dolor sit amet, consectetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum.",
+    "Lorem ipsum dolor sit amet, consectetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum.",
     "Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis."
   ]
 })
