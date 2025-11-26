@@ -1,7 +1,5 @@
 <template>
-  <div id="home" class="min-h-screen bg-gradient-to-b from-navy-900 to-navy-800">
-    <NavBar />
-
+  <div id="home" class="min-h-screen ">
     <main class="mx-auto max-w-6xl px-4">
       <!-- Hero -->
       <section class="relative mt-8 md:mt-10 rounded-smooth bg-black shadow-soft overflow-hidden">
@@ -16,7 +14,9 @@
             aria-label="Play"
             class="group grid place-items-center h-16 w-16 md:h-20 md:w-20 rounded-full border border-white/50 hover:border-white transition"
           >
-            <span class="block h-10 w-10 md:h-12 md:w-12 rounded-full grid place-items-center bg-white/10 group-hover:bg-white/20 transition">
+            <span
+              class="grid h-10 w-10 md:h-12 md:w-12 rounded-full place-items-center bg-white/10 group-hover:bg-white/20 transition"
+            >
               <svg viewBox="0 0 24 24" class="h-6 w-6 fill-white">
                 <path d="M8 5v14l11-7z" />
               </svg>
@@ -69,7 +69,12 @@
         <div class="md:col-span-1">
           <div class="h-40 rounded-smooth bg-slateglass border border-white/10 relative overflow-hidden">
             <svg viewBox="0 0 200 200" class="absolute inset-0 m-auto h-full w-full opacity-60">
-              <path d="M20 180 C60 120, 40 60, 100 20 C160 60, 140 120, 180 180" fill="none" stroke="white" stroke-width="2" />
+              <path
+                d="M20 180 C60 120, 40 60, 100 20 C160 60, 140 120, 180 180"
+                fill="none"
+                stroke="white"
+                stroke-width="2"
+              />
             </svg>
           </div>
         </div>
@@ -86,7 +91,7 @@
 
           <a
             href="#jetzt-anmelden"
-            class="mt-4 inline-block text-xs font-semibold px-3 py-1.5 rounded-md bg-white text-navy-900 hover:opacity-90"
+            class="mt-4 inline-block text-xs font-semibold px-3 py-1.5 rounded-md bg-white text-slate-900 hover:opacity-90"
           >
             Jetzt anmelden
           </a>
@@ -95,7 +100,9 @@
 
       <!-- Blog Teaser -->
       <section id="blog" class="mt-12">
-        <h4 class="text-xs tracking-widest font-semibold text-white/90">BLOGS</h4>
+        <h4 class="text-xs tracking-widest font-semibold text-white/90">
+          BLOGS
+        </h4>
 
         <div class="mt-4">
           <div
@@ -110,16 +117,12 @@
         </div>
       </section>
 
-      <!-- Footer Spacer -->
       <div class="h-16"></div>
     </main>
   </div>
 </template>
 
-<script>
-import NavBar from './NavBar.vue'
-export default { components: { NavBar } }
-
+<script setup>
 const GalleryCard = {
   name: 'GalleryCard',
   template: `

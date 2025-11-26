@@ -1,0 +1,28 @@
+{
+  "nav": {
+    "home": "Home",
+    "info": "Info",
+    "blog": "Blog",
+    "signup": "Anmeldung",
+    "media": "Media"
+  },
+  "auth": {
+    "welcomeTitle": "Willkommen",
+    "welcomeText": "Lorem ipsum dolor sit amet, consectetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna.",
+    "login": {
+      "title": "Login",
+      "button": "Anmelden"
+    },
+    "register": {
+      "title": "Registrieren",
+      "button": "Registrieren"
+    },
+    "email": "E Mail",
+    "password": "Passwort",
+    "passwordRepeat": "Passwort erneut eingeben",
+    "noAccount": "Kein Login",
+    "registerLink": "Registrieren",
+    "hasAccount": "Login vorhanden",
+    "loginLink": "Anmelden"
+  }
+}

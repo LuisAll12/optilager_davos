@@ -1,0 +1,9 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "info": "Infos",
+    "blog": "Blog",
+    "signup": "Inscription",
+    "media": "Médias"
+  }
+}
