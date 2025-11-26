@@ -13,7 +13,7 @@
       <!-- Desktop Navigation -->
       <ul class="hidden md:flex items-center gap-6 text-sm">
         <li><RouterLink to="/" class="hover:opacity-80">{{ t("nav.home") }}</RouterLink></li>
-        <li><a href="#info" class="hover:opacity-80">{{ t("nav.info") }}</a></li>
+        <li><RouterLink to="/info" class="hover:opacity-80">{{ t("nav.info") }}</RouterLink></li>
         <li><a href="#blog" class="hover:opacity-80">{{ t("nav.blog") }}</a></li>
         <li><RouterLink to="/registration" class="hover:opacity-80">{{ t("nav.signup") }}</RouterLink></li>
         <li><a href="#media" class="hover:opacity-80">{{ t("nav.media") }}</a></li>
