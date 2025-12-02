@@ -22,28 +22,41 @@
                     </h2>
 
                     <form class="space-y-4" @submit.prevent="onSubmit">
+                        <!-- Email -->
                         <div class="space-y-1.5">
                             <label class="text-xs font-medium tracking-wide">
                                 {{ t("auth.email") }}
                             </label>
-                            <input type="email" v-model="form.email" required
-                                class="w-full rounded-md bg-white text-slate-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                            <input type="email" v-model="form.email" required :disabled="isLoading"
+                                class="w-full rounded-md bg-white text-slate-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-70 disabled:cursor-not-allowed">
                         </div>
 
+                        <!-- Passwort -->
                         <div class="space-y-1.5">
                             <label class="text-xs font-medium tracking-wide">
                                 {{ t("auth.password") }}
                             </label>
-                            <input type="password" v-model="form.password" required
-                                class="w-full rounded-md bg-white text-slate-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                            <input type="password" v-model="form.password" required :disabled="isLoading"
+                                class="w-full rounded-md bg-white text-slate-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-70 disabled:cursor-not-allowed">
                         </div>
 
+                        <!-- Passwort Wiederholung nur bei Register -->
                         <div v-if="!isLogin" class="space-y-1.5">
                             <label class="text-xs font-medium tracking-wide">
                                 {{ t("auth.passwordRepeat") }}
                             </label>
-                            <input type="password" v-model="form.passwordConfirm" required
-                                class="w-full rounded-md bg-white text-slate-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500">
+                            <input type="password" v-model="form.passwordConfirm" required :disabled="isLoading"
+                                class="w-full rounded-md bg-white text-slate-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-70 disabled:cursor-not-allowed">
+                        </div>
+
+                        <!-- Messages -->
+                        <div class=" pt-2 space-y-1">
+                            <p v-if="errorMessage" class="text-xs text-red-400">
+                                {{ errorMessage }}
+                            </p>
+                            <p v-if="successMessage" class="text-xs text-emerald-400">
+                                {{ successMessage }}
+                            </p>
                         </div>
 
                         <div class="pt-4 flex flex-col gap-3">
@@ -52,28 +65,31 @@
                                 <span v-if="isLogin">
                                     {{ t("auth.noAccount") }}
                                     <button type="button" class="text-sky-400 font-medium hover:underline ml-1"
-                                        @click="switchMode">
+                                        @click="switchMode" :disabled="isLoading">
                                         {{ t("auth.registerLink") }}
                                     </button>
                                 </span>
                                 <span v-else>
                                     {{ t("auth.hasAccount") }}
                                     <button type="button" class="text-sky-400 font-medium hover:underline ml-1"
-                                        @click="switchMode">
+                                        @click="switchMode" :disabled="isLoading">
                                         {{ t("auth.loginLink") }}
                                     </button>
                                 </span>
                             </p>
 
                             <!-- Primary Button -->
-                            <button type="submit"
-                                class="inline-flex items-center justify-center gap-2 rounded-md bg-sky-500 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-sky-400 transition">
-                                <span>
+                            <button type="submit" :disabled="isLoading"
+                                class="inline-flex items-center justify-center gap-2 rounded-md bg-sky-500 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-sky-400 transition disabled:opacity-60 disabled:cursor-not-allowed">
+                                <span v-if="!isLoading">
                                     {{ isLogin ? t("auth.login.button") : t("auth.register.button") }}
                                 </span>
-                                <span aria-hidden="true">
-                                    →
+                                <span v-else class="flex items-center gap-2">
+                                    <span
+                                        class="h-3 w-3 rounded-full border border-white/30 border-t-transparent animate-spin"></span>
+                                    <span>Bitte warten...</span>
                                 </span>
+                                <span aria-hidden="true">→</span>
                             </button>
                         </div>
                     </form>
@@ -86,10 +102,18 @@
 <script setup>
 import { reactive, ref } from "vue"
 import { useI18n } from "vue-i18n"
+import { useAuthStore } from "../stores/auth" // Pfad ggf. anpassen
+import { useRouter, useRoute } from "vue-router"
 
 const { t } = useI18n()
+const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
 
 const isLogin = ref(true)
+const isLoading = ref(false)
+const errorMessage = ref("")
+const successMessage = ref("")
 
 const form = reactive({
     email: "",
@@ -97,23 +121,109 @@ const form = reactive({
     passwordConfirm: ""
 })
 
+function resetMessages() {
+    errorMessage.value = ""
+    successMessage.value = ""
+}
+
 function switchMode() {
+    if (isLoading.value) return
+    resetMessages()
     isLogin.value = !isLogin.value
 }
 
-function onSubmit() {
-    if (!isLogin.value && form.password !== form.passwordConfirm) {
-        alert("Passwörter stimmen nicht überein")
+async function onSubmit() {
+    resetMessages()
+
+    if (isLoading.value) return
+    isLoading.value = true
+
+    try {
+        if (!isLogin.value && form.password !== form.passwordConfirm) {
+            errorMessage.value = "Passwörter stimmen nicht überein."
+            isLoading.value = false
+            return
+        }
+
+        if (isLogin.value) {
+            await handleLogin(form.email, form.password)
+        } else {
+            await handleRegisterAndLogin(form.email, form.password)
+        }
+    } catch (err) {
+        console.error(err)
+        errorMessage.value = "Es ist ein unerwarteter Fehler aufgetreten."
+    } finally {
+        isLoading.value = false
+    }
+}
+
+async function handleRegisterAndLogin(formEmail, formPassword) {
+    const response = await fetch(
+        `${import.meta.env.VITE_APP_BACKEND_URL}/accounts/register`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: formEmail,
+                password: formPassword,
+                role: "user"
+            })
+        }
+    )
+
+    const data = await response.json().catch(() => ({}))
+
+    if (!response.ok) {
+        console.error("Fehler bei der Registrierung:", data)
+        errorMessage.value =
+            data.message || "Fehler bei der Registrierung. Bitte erneut versuchen."
         return
     }
 
-    if (isLogin.value) {
-        console.log("Login", { email: form.email, password: form.password })
-    } else {
-        console.log("Register", {
-            email: form.email,
-            password: form.password
-        })
+    successMessage.value =
+        "Registrierung erfolgreich. Du wirst nun automatisch angemeldet."
+
+    // Direktes Login danach
+    await handleLogin(formEmail, formPassword)
+    isLogin.value = true
+}
+
+async function handleLogin(formEmail, formPassword) {
+    const response = await fetch(
+        `${import.meta.env.VITE_APP_BACKEND_URL}/auth/login`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: formEmail,
+                password: formPassword
+            })
+        }
+    )
+
+    const data = await response.json().catch(() => ({}))
+
+    if (!response.ok) {
+        console.error("Fehler beim Login:", data)
+        errorMessage.value =
+            data.message || "Fehler beim Login. Bitte Zugangsdaten prüfen."
+        return
     }
+    const token = data.accessToken || data.access_token
+    if (!token) {
+        errorMessage.value =
+            "Login-Antwort enthielt kein Token. Bitte Backend prüfen."
+        return
+    }
+    authStore.setSession(token, formEmail)
+    const redirect = (route.query.redirect) || '/info'
+    await router.push(redirect)
+
+    successMessage.value = "Login erfolgreich."
 }
 </script>
