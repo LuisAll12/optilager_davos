@@ -272,7 +272,16 @@
                             </div>
                         </div>
                     </div>
-
+                    <div v-if="submitError || submitSuccess" class="mb-4 space-y-2">
+                        <p v-if="submitError"
+                            class="text-xs text-red-400 bg-red-950/40 border border-red-500/40 rounded-md px-3 py-2">
+                            {{ submitError }}
+                        </p>
+                        <p v-if="submitSuccess"
+                            class="text-xs text-emerald-300 bg-emerald-950/40 border border-emerald-500/40 rounded-md px-3 py-2">
+                            {{ submitSuccess }}
+                        </p>
+                    </div>
                     <!-- Footer Step 2 -->
                     <div class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <button type="button"
@@ -282,8 +291,10 @@
                         </button>
 
                         <button type="submit"
-                            class="inline-flex items-center justify-center gap-2 rounded-md bg-sky-500 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-sky-400 transition">
-                            Abschliessen
+                            class="inline-flex items-center justify-center gap-2 rounded-md bg-sky-500 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-sky-400 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                            :disabled="isSubmitting">
+                            <span v-if="!isSubmitting">Abschliessen</span>
+                            <span v-else>Wird übermittelt…</span>
                             <span aria-hidden="true">→</span>
                         </button>
                     </div>
@@ -296,6 +307,8 @@
 <script setup lang="ts">
 import { reactive, ref } from "vue";
 import { PencilSquareIcon } from "@heroicons/vue/24/outline";
+import { apiFetch } from "../services/apiClient";
+import { useRouter, useRoute } from "vue-router";
 
 // Typen für das Formular
 interface SailorForm {
@@ -324,6 +337,12 @@ interface ParentForm {
 }
 
 const step = ref(1);
+const isSubmitting = ref(false);
+const submitError = ref<string | null>(null);
+const submitSuccess = ref<string | null>(null);
+
+const router = useRouter();
+const route = useRoute();
 
 // Liste aller Kinder sauber typisiert
 const children = ref<SailorForm[]>([]);
@@ -493,7 +512,10 @@ function isValidAhv(number: string): boolean {
     return check === digits[12];
 }
 
-function submitForm() {
+async function submitForm() {
+    submitError.value = null;
+    submitSuccess.value = null;
+
     if (children.value.length === 0) {
         alert("Bitte mindestens ein Kind erfassen.");
         step.value = 1;
@@ -512,15 +534,65 @@ function submitForm() {
         parent.acceptTerms;
 
     if (!parentValid) {
-        alert("Bitte alle Pflichtfelder bei den Eltern ausfüllen und Bestätigungen setzen.");
+        alert(
+            "Bitte alle Pflichtfelder bei den Eltern ausfüllen und Bestätigungen setzen."
+        );
         return;
     }
 
+    const currentYear = new Date().getFullYear();
+
+    const { confirmation, ...parentForPayload } = parent;
+
     const payload = {
-        children: children.value,
-        parent: { ...parent },
+        year: currentYear,
+        parent: parentForPayload,
+        children: children.value.map((c) => ({ ...c })),
     };
 
+    try {
+        isSubmitting.value = true;
+
+        const resp = await apiFetch("/registrations", {
+            method: "POST",
+            body: JSON.stringify(payload),
+
+        });
+
+        const data = await resp.json().catch(() => null);
+
+        if (!resp.ok) {
+            // Versuche sinnvolle Fehlermeldung zu extrahieren
+            const message =
+                data?.message ||
+                (Array.isArray(data?.message) ? data.message.join(", ") : null) ||
+                "Es ist ein Fehler bei der Anmeldung aufgetreten.";
+
+            submitError.value = message;
+            return;
+        }
+
+        submitSuccess.value =
+            "Die Anmeldung wurde erfolgreich übermittelt. Du erhältst in den nächsten Wochen eine Bestätigungsmail.";
+
+        // Optional Formular leeren
+        children.value = [];
+        resetSailor();
+        // Eltern bewusst NICHT komplett löschen, damit sie bei mehreren Kindern nicht alles neu tippen
+        parent.acceptChildTerms = false;
+        parent.acceptTerms = false;
+        step.value = 1;
+    } catch (err) {
+        console.error("Fehler beim Senden der Anmeldung", err);
+        submitError.value =
+            "Die Anmeldung konnte nicht gesendet werden. Bitte versuche es später erneut.";
+    } finally {
+        isSubmitting.value = false;
+
+        const q =  route.query.redirect;
+        const redirect = typeof q === 'string' ? q : '/info';
+        await router.push(redirect);
+    }
 }
 
 
