@@ -297,12 +297,42 @@
 import { reactive, ref } from "vue";
 import { PencilSquareIcon } from "@heroicons/vue/24/outline";
 
+// Typen für das Formular
+interface SailorForm {
+    firstName: string;
+    lastName: string;
+    birthdate: string;
+    gender: string;
+    club: string;
+    ahv: string;
+    wasInCamp: string;
+    diet: string;
+    comment: string;
+}
+
+interface ParentForm {
+    firstName: string;
+    lastName: string;
+    address: string;
+    zip: string;
+    city: string;
+    emergencyPhone: string;
+    email: string;
+    confirmation: string;
+    acceptTerms: boolean;
+    acceptChildTerms: boolean;
+}
+
 const step = ref(1);
-const children = ref([]); // Liste aller Kinder
-const editingIndex = ref<number | null>(null); // Index des Kindes, das bearbeitet wird, oder null
+
+// Liste aller Kinder sauber typisiert
+const children = ref<SailorForm[]>([]);
+
+const editingIndex = ref<number | null>(null);
 const ahvValid = ref(true);
 
-const sailor = reactive({
+// Aktuell bearbeitetes Kind
+const sailor = reactive<SailorForm>({
     firstName: "",
     lastName: "",
     birthdate: "",
@@ -314,7 +344,8 @@ const sailor = reactive({
     comment: "",
 });
 
-const parent = reactive({
+// Eltern-Formular
+const parent = reactive<ParentForm>({
     firstName: "",
     lastName: "",
     address: "",
@@ -328,17 +359,16 @@ const parent = reactive({
 });
 
 function resetSailor() {
-    sailor.firstName = ""
-    sailor.lastName = ""
-    sailor.birthdate = ""
-    sailor.gender = ""
-    sailor.club = ""
-    sailor.ahv = ""
-    sailor.wasInCamp = ""
-    sailor.diet = ""
-    sailor.comment = ""
+    sailor.firstName = "";
+    sailor.lastName = "";
+    sailor.birthdate = "";
+    sailor.gender = "";
+    sailor.club = "";
+    sailor.ahv = "";
+    sailor.wasInCamp = "";
+    sailor.diet = "";
+    sailor.comment = "";
 }
-
 
 function sailorFormEmpty() {
     return (
@@ -356,13 +386,13 @@ function sailorFormEmpty() {
 
 function validateSailor() {
     return (
-        sailor.firstName &&
-        sailor.lastName &&
-        sailor.birthdate &&
-        sailor.gender &&
-        sailor.club &&
-        sailor.wasInCamp &&
-        sailor.diet
+        !!sailor.firstName &&
+        !!sailor.lastName &&
+        !!sailor.birthdate &&
+        !!sailor.gender &&
+        !!sailor.club &&
+        !!sailor.wasInCamp &&
+        !!sailor.diet
     );
 }
 
@@ -426,6 +456,7 @@ function goBack() {
 // Kind zum Bearbeiten auswählen
 function startEditChild(index: number) {
     const child = children.value[index];
+
     sailor.firstName = child.firstName;
     sailor.lastName = child.lastName;
     sailor.birthdate = child.birthdate;
@@ -462,38 +493,35 @@ function isValidAhv(number: string): boolean {
     return check === digits[12];
 }
 
-
-
 function submitForm() {
     if (children.value.length === 0) {
-        alert("Bitte mindestens ein Kind erfassen.")
-        step.value = 1
-        return
+        alert("Bitte mindestens ein Kind erfassen.");
+        step.value = 1;
+        return;
     }
 
     const parentValid =
-        parent.firstName &&
-        parent.lastName &&
-        parent.address &&
-        parent.zip &&
-        parent.city &&
-        parent.emergencyPhone &&
-        parent.email &&          // NEU
+        !!parent.firstName &&
+        !!parent.lastName &&
+        !!parent.address &&
+        !!parent.zip &&
+        !!parent.city &&
+        !!parent.emergencyPhone &&
+        !!parent.email &&
         parent.acceptChildTerms &&
-        parent.acceptTerms
+        parent.acceptTerms;
 
     if (!parentValid) {
-        alert("Bitte alle Pflichtfelder bei den Eltern ausfüllen und Bestätigungen setzen.")
-        return
+        alert("Bitte alle Pflichtfelder bei den Eltern ausfüllen und Bestätigungen setzen.");
+        return;
     }
 
     const payload = {
         children: children.value,
         parent: { ...parent },
-    }
+    };
 
-    console.log("Gesamte Anmeldung:", JSON.stringify(payload, null, 2))
-    alert("Anmeldung erfolgreich übermittelt. Siehe Console Log für JSON.")
 }
+
 
 </script>
